@@ -255,6 +255,13 @@
         margin-bottom: 7px;
       }
 
+      #surveyScreen .survey-question-guide {
+        margin-left: auto;
+        color: #7c6f80;
+        font-size: 11.5px;
+        white-space: nowrap;
+      }
+
       #surveyScreen .survey-question-num {
         width: auto;
         height: auto;
@@ -2691,6 +2698,19 @@
         margin-left: 0;
       }
 
+      #surveyScreen .field-character-count {
+        margin-top: 6px;
+        color: #8a818e;
+        font-size: 11.5px;
+        line-height: 1;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      #surveyScreen .field-character-count.is-near-limit {
+        color: #6f327d;
+      }
+
       @media (max-width: 560px) {
         .interest-checklist {
           grid-template-columns: 1fr;
@@ -3331,6 +3351,7 @@
             <div class="survey-question-head">
               <span class="survey-question-num">01</span>
               <div class="field-label">이 과정을 통해 무엇을 배우고, 어떤 커리어 목표를 이루고 싶나요?</div>
+              <span class="survey-question-guide">500자 이내</span>
             </div>
             <div class="field-help">
               현재 가장 발전시키고 싶은 취업 역량과 배우고 싶은 기술을 바탕으로, 희망하시는 직무·산업·기업 등 목표하는
@@ -3340,14 +3361,17 @@
             <textarea
               class="field-input field-textarea"
               id="learningGoal"
+              maxlength="500"
               placeholder="예: B2B SaaS 산업의 CRM 데이터 분석가로 취업하는 것이 목표입니다. SQL로 고객의 제품 이용 및 영업 데이터를 분석하고, Tableau로 전환율과 이탈 징후를 시각화해 영업·고객성공팀의 전략 수립을 지원하는 역량을 기르고 싶습니다."
             ></textarea>
+            <div class="field-character-count" id="learningGoalCount" aria-live="polite">0 / 500자</div>
             <div class="field-error-msg" id="err-learningGoal">과정에서 얻고 싶은 점을 입력해주세요.</div>
           </div>
           <div class="survey-question">
             <div class="survey-question-head">
               <span class="survey-question-num">02</span>
               <div class="field-label">S.T.A. Track을 통해 어떤 AI Agent를 만들어보고 싶나요?</div>
+              <span class="survey-question-guide">500자 이내</span>
             </div>
             <div class="field-help">
               누가 겪는 어떤 문제를 해결하고 싶은지, Tableau·Slack·Codex 등 직접 사용해보고 싶은 기술은 무엇인지
@@ -3357,8 +3381,10 @@
             <textarea
               class="field-input field-textarea"
               id="agentIdea"
+              maxlength="500"
               placeholder="예: 이커머스 기업의 CRM 마케터를 위해 고객 문의, 구매 이력, 캠페인 반응 데이터를 분석하는 Agent를 만들고 싶습니다. Python·SQL과 생성형 AI API를 활용해 고객별 다음 캠페인과 메시지를 제안하고, 결과는 Tableau 대시보드로 확인하게 하고 싶습니다."
             ></textarea>
+            <div class="field-character-count" id="agentIdeaCount" aria-live="polite">0 / 500자</div>
             <div class="field-error-msg" id="err-agentIdea">만들고 싶은 AI Agent를 입력해주세요.</div>
           </div>
           <div class="survey-question">
@@ -4240,6 +4266,8 @@
           document.getElementById("itDuration").value = draft.itDuration || "";
           document.getElementById("learningGoal").value = draft.learningGoal || "";
           document.getElementById("agentIdea").value = draft.agentIdea || "";
+          updateSurveyCharacterCount("learningGoal");
+          updateSurveyCharacterCount("agentIdea");
           const selected = new Set(draft.interestAreas || []);
           document.querySelectorAll("#interestArea input[type='checkbox']").forEach((input) => {
             input.checked = selected.has(input.value);
@@ -4379,6 +4407,8 @@
         document.getElementById("itDuration").selectedIndex = 0;
         document.getElementById("learningGoal").value = "";
         document.getElementById("agentIdea").value = "";
+        updateSurveyCharacterCount("learningGoal");
+        updateSurveyCharacterCount("agentIdea");
         document.querySelectorAll("#interestArea input[type='checkbox']").forEach((input) => {
           input.checked = false;
         });
@@ -4399,6 +4429,18 @@
       // ═══════════════════════════════════════════
       //  초기화 — 페이지 로드 시 스프레드시트 문제 로드
       // ═══════════════════════════════════════════
+      function updateSurveyCharacterCount(id) {
+        const field = document.getElementById(id);
+        const counter = document.getElementById(`${id}Count`);
+        const characters = Array.from(field.value);
+
+        if (characters.length > 500) field.value = characters.slice(0, 500).join("");
+
+        const count = Array.from(field.value).length;
+        counter.textContent = `${count} / 500자`;
+        counter.classList.toggle("is-near-limit", count >= 450);
+      }
+
       document.getElementById("examTitle").textContent = CONFIG.examTitle;
       document.getElementById("examSubtitle").innerHTML = CONFIG.examSubtitleHtml;
       document.getElementById("initialOverlayTitle").textContent = CONFIG.examTitle;
@@ -4412,6 +4454,7 @@
       });
       ["learningGoal", "agentIdea"].forEach((id) => {
         document.getElementById(id).addEventListener("input", () => {
+          updateSurveyCharacterCount(id);
           setFieldError(id, false);
           saveApplicantDraft();
         });
